@@ -1,12 +1,17 @@
 package com.example.mma3.Controller;
 
+import com.example.mma3.EventHandler.MatchCreatedHandler;
+import com.example.mma3.EventHandler.Mediator;
+import com.example.mma3.Events.Commands.MatchCreated;
 import com.example.mma3.Model.*;
 import com.example.mma3.Model.DTO.MatchDTO;
 import com.example.mma3.Service.CovidTestService;
 import com.example.mma3.Service.FighterService;
 import com.example.mma3.Service.MatchService;
 import com.example.mma3.Service.TournamentService;
-import com.example.mma3.Strategy.*;
+import com.example.mma3.Strategy.Context;
+import com.example.mma3.Strategy.MonthlyStrategy;
+import com.example.mma3.Strategy.WeeklyStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -15,10 +20,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @RequiredArgsConstructor
 @RequestMapping("/mma/data")
@@ -29,6 +32,7 @@ public class ModelController {
     private final MatchService matchService;
     private final FighterService fighterService;
     private final TournamentService tournamentService;
+    private Mediator mediator;
 
     @GetMapping(path="/covidtests")
     public List<CovidTest> getAllTests(){
@@ -103,10 +107,7 @@ public class ModelController {
         return ResponseEntity.noContent().build();
     }
 
-    public static boolean generateCovidResult(int probability){
-        boolean result = new Random().nextInt(probability)==0;
-        return result;
-    }
+
 
     @GetMapping(path="/fighters/{idFighter}")
     public Fighter getFighter(@PathVariable int idFighter){
@@ -179,97 +180,8 @@ public class ModelController {
         return createdTournament;
     }
 
-    private boolean isScheduled(Fighter fighter){
-        List<MatchT> matches = matchService.findAll();
-        for(MatchT m : matches){
-            if(fighter.getIdFighter() == m.getIdFighter1() || fighter.getIdFighter() == m.getIdFighter2())
-                return true;
-        }
-        return false;
-    }
-
-    private List<Fighter> testFighters(String dateTimeStart){
-        List<Fighter> fighters = fighterService.findAll();
-        LocalDate date = LocalDate.parse(dateTimeStart);
-
-        //Setting initial values
-        for(Fighter fighter : fighters){
-            CovidTest newCovidTest = new CovidTest();
-            boolean result = generateCovidResult(10);
-            newCovidTest.setResult(result);
-            newCovidTest.setTestDate(date.toString());
-            CovidTest covidTest =  covidTestService.save(newCovidTest);
-            if(result == true){
-                fighter.setInitialTestId(covidTest.getIdCovidTest());
-                fighter.setInQuarantine(true);
-            }
-            else{
-                fighter.setSecondTestId(covidTest.getIdCovidTest());
-            }
-        }
-
-        for(Fighter fighter : fighters){
-            if(fighter.isInQuarantine()){
-                int healthyWeeks = 0;
-                while(healthyWeeks < 3){
-                    boolean result = generateCovidResult(10);
-                    date = date.plusWeeks(1);
-                    if(result == false){
-                        healthyWeeks++;
-                    }
-                    else{
-                        healthyWeeks = 0;
-                    }
-                }
-                CovidTest newCovidTest = new CovidTest();
-                newCovidTest.setTestDate(date.toString());
-                newCovidTest.setResult(false);
-                CovidTest covidTest =  covidTestService.save(newCovidTest);
-                fighter.setSecondTestId(covidTest.getIdCovidTest());
-                fighter.setInQuarantine(false);
-            }
-        }
-
-        return fighters;
-    }
-
-    private List<Fighter> pickFighters(List<Fighter> fighterList, String dateTimeStart, int weekFlag) throws Exception {
-        List<Fighter> pickedFighters = new ArrayList<Fighter>();
-        for(Fighter fighter : fighterList){
-            CovidTest secondTest = covidTestService.findById(fighter.getSecondTestId());
-            LocalDate secondTestDate = LocalDate.parse(secondTest.getTestDate());
-            LocalDate fightDate = LocalDate.parse(dateTimeStart);
-            if(!isScheduled(fighter) &&  fightDate.isAfter(secondTestDate)){
-                pickedFighters.add(fighter);
-            }
-        }
-
-        if(pickedFighters.isEmpty()){
-            throw new Exception("No fighter found for week " + weekFlag);
-        }
-
-        fighterList.remove(pickedFighters.get(0));
-        for(Fighter fighter : fighterList){
-            CovidTest secondTest = covidTestService.findById(fighter.getSecondTestId());
-            LocalDate secondTestDate = LocalDate.parse(secondTest.getTestDate());
-            LocalDate fightDate = LocalDate.parse(dateTimeStart);
-            float weightDiff = Math.abs(pickedFighters.get(0).getWeight() - fighter.getWeight());
-            if(!isScheduled(fighter) &&  fightDate.isAfter(secondTestDate) && weightDiff <= 5){
-                pickedFighters.add(fighter);
-            }
-        }
-
-        if(pickedFighters.size() == 1){
-            throw new Exception("Can not find second fighter for week " + weekFlag);
-        }
-
-        return pickedFighters;
-    }
-
-    private int weekFlag = 1;
-
     public void resetWeek(){
-        this.weekFlag = 1;
+        this.weekFlag = 0;
     }
 
     @PutMapping(path="/week-reset")
@@ -277,6 +189,8 @@ public class ModelController {
         resetWeek();
         return new ResponseEntity(HttpStatus.OK);
     }
+
+    private int weekFlag = 0;
 
     private static int applyStrategy(Tournament tournament, int weekFlag){
         String tournamentType = tournament.getType();
@@ -292,33 +206,15 @@ public class ModelController {
 
     @PostMapping(path="/matches")
     public ResponseEntity createMatchT(@RequestBody Tournament tournament){
-        MatchBuilder builder = new MatchBuilder();
-        String dateTimeStart = tournament.getDateTimeStart();
-        List<Fighter> fighters = testFighters(dateTimeStart);
-        LocalDate currentDate = LocalDate.parse(dateTimeStart).plusDays( (int)(weekFlag - 1) * 7 + (int)(Math.random() * 6) );
-        List<Fighter> pickedFighters;
-        try {
-            pickedFighters = pickFighters(fighters, currentDate.toString(), (int)weekFlag);
-        } catch (Exception e) {
-            weekFlag = applyStrategy(tournament, weekFlag);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        }
+        mediator = new Mediator(covidTestService, matchService, fighterService, tournamentService);
+        MatchCreated event = new MatchCreated();
         weekFlag = applyStrategy(tournament, weekFlag);
-        int idFighter1 = pickedFighters.get(0).getIdFighter();
-        int idFighter2 = pickedFighters.get(1).getIdFighter();
-        builder.addIdTournament(tournament.getIdTournament())
-                .addDateTimeStart(currentDate.toString())
-                .addIdFighter1(idFighter1)
-                .addIdFighter2(idFighter2)
-                .addRounds()
-                .addWinner();
-        MatchT match = builder.build();
-        MatchT createdMatch = matchService.save(match);
-        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{idMatchT}").buildAndExpand(createdMatch.getIdMatchT()).toUri();
-        return ResponseEntity.created(uri).build();
+        event.setTournament(tournament);
+        event.setWeekFlag(weekFlag);
+        return mediator.handle(event);
     }
 
-    @PostMapping(path="/addCovitTest")
+   /* @PostMapping(path="/addCovitTest")
     public @ResponseBody CovidTest addNewCovidTest(@RequestParam String testDate, @RequestParam(required = false) String result){
         CovidTest ct = new CovidTest();
         ct.setTestDate(testDate);
@@ -330,7 +226,7 @@ public class ModelController {
         ct.setResult(newResult);
         CovidTest ctSaved = covidTestService.save(ct);
         return ctSaved;
-    }
+    }*/
 
     private boolean isFighterIDUsed(int id){
         ArrayList<Fighter> fighters = (ArrayList<Fighter>) fighterService.findAll();

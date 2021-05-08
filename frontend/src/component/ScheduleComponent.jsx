@@ -9,7 +9,7 @@ class ScheduleComponent extends Component{
     constructor(props) {
         super(props);
         this.state = {
-            dateTimeStart: null,
+            dateTimeStart: '',
             tournamentTitle: '',
             location: '',
             matches: [],
@@ -114,7 +114,7 @@ class ScheduleComponent extends Component{
         const {tournamentTitle,dateTimeStart, location, tournamentType} = this.state
         return(
             <div className='container'>
-                {this.state.errorMessage && <div class="alert alert-danger">{this.state.errorMessage}</div>}
+                {this.state.errorMessage && <div className="alert alert-danger">{this.state.errorMessage}</div>}
                 <Formik
                     initialValues={{ dateTimeStart,tournamentTitle, location, tournamentType}}
                     onSubmit={this.onSubmit}
@@ -130,7 +130,7 @@ class ScheduleComponent extends Component{
                                               className="alert alert-warning" />
                                 <ErrorMessage name="location" component="div"
                                               className="alert alert-warning" />
-                                <ErrorMessage name="startDate" component="div"
+                                <ErrorMessage name="dateTimeStart" component="div"
                                               className="alert alert-warning" />
                                 <ErrorMessage name="tournamentType" component="div"
                                               className="alert alert-warning" />
@@ -167,16 +167,16 @@ class ScheduleComponent extends Component{
                 <br></br><br></br>
                 <div className="table">
                     <thead>
-                    <tr>
-                        <th>Id Match</th>
-                        <th>Tournament Title</th>
-                        <th>Fighter 1</th>
-                        <th>Fighter 2</th>
-                        <th>Winner</th>
-                        <th>Rounds</th>
-                        <th>Date</th>
-                        <th>Delete</th>
-                    </tr>
+                        <tr>
+                            <th>Id Match</th>
+                            <th>Tournament Title</th>
+                            <th>Fighter 1</th>
+                            <th>Fighter 2</th>
+                            <th>Winner</th>
+                            <th>Rounds</th>
+                            <th>Date</th>
+                            <th>Delete</th>
+                        </tr>
                     </thead>
                     <tbody>
                     {
@@ -196,7 +196,7 @@ class ScheduleComponent extends Component{
                     }
                     </tbody>
                 </div>
-                <button className="btn btn-success" onClick={this.refreshMatches}></button>
+                <button className="btn btn-success" onClick={this.refreshMatches}>Refresh matches</button>
             </div>
         )
     }
