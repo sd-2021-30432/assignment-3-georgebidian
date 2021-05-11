@@ -1,43 +1,54 @@
 package com.example.mma3.EventHandler;
 
-import com.example.mma3.Events.Commands.MatchCreated;
-import com.example.mma3.Service.CovidTestService;
-import com.example.mma3.Service.FighterService;
-import com.example.mma3.Service.MatchService;
-import com.example.mma3.Service.TournamentService;
+import com.example.mma3.Events.Commands.*;
+import com.example.mma3.Events.Queries.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Constructor;
 import java.util.HashMap;
 
+@Service
 public class Mediator {
     private HashMap<Class, Class> _handlerMap = new HashMap<>();
 
-    private final CovidTestService covidTestService;
-    private final MatchService matchService;
-    private final FighterService fighterService;
-    private final TournamentService tournamentService;
+    @Autowired
+    private ApplicationContext context;
 
-    public Mediator(CovidTestService covidTestService, MatchService matchService, FighterService fighterService, TournamentService tournamentService){
-        this.covidTestService = covidTestService;
-        this.matchService = matchService;
-        this.fighterService = fighterService;
-        this.tournamentService = tournamentService;
-
+    public Mediator(){
         _handlerMap.put(MatchCreated.class, MatchCreatedHandler.class);
+        _handlerMap.put(GetAllCovidTests.class, GetAllCovidTestsHandler.class);
+        _handlerMap.put(GetAllFighters.class, GetAllFightersHandler.class);
+        _handlerMap.put(GetAllMatches.class, GetAllMatchesHandler.class);
+        _handlerMap.put(GetAllTournaments.class, GetAllTournamentsHandler.class);
+        _handlerMap.put(CovidTestDeleted.class, CovidTestDeletedHandler.class);
+        _handlerMap.put(FighterDeleted.class, FighterDeletedHandler.class);
+        _handlerMap.put(MatchDeleted.class, MatchDeletedHandler.class);
+        _handlerMap.put(TournamentDeleted.class, TournamentDeletedHandler.class);
+        _handlerMap.put(GetFighterById.class, GetFighterByIdHandler.class);
+        _handlerMap.put(GetCovidTestById.class, GetCovidTestByIdHandler.class);
+        _handlerMap.put(GetTournamentById.class, GetTournamentByIdHandler.class);
+        _handlerMap.put(FighterCreated.class, FighterCreatedHandler.class);
+        _handlerMap.put(CovidTestCreated.class, CovidTestCreatedHandler.class);
+        _handlerMap.put(TournamentCreated.class, TournamentCreatedHandler.class);
+        _handlerMap.put(TournamentCreatedReturned.class, TournamentCreatedReturnedHandler.class);
+        _handlerMap.put(FighterUpdated.class, FighterUpdatedHandler.class);
+        _handlerMap.put(CovidTestUpdated.class, CovidTestUpdatedHandler.class);
+        _handlerMap.put(TournamentUpdated.class, TournamentUpdatedHandler.class);
+        _handlerMap.put(MatchUpdated.class, MatchUpdatedHandler.class);
         //more handler TBA
     }
 
     public <T> ResponseEntity handle(T event){
         Class handlerType = _handlerMap.get(event.getClass());
         try {
-            Constructor ctr = handlerType.getConstructor(CovidTestService.class, MatchService.class, FighterService.class, TournamentService.class);
-            IEventHandler<T> handler = (IEventHandler<T>) ctr.newInstance(new Object[] {covidTestService, matchService, fighterService, tournamentService});
+            IEventHandler<T> handler = (IEventHandler<T>) context.getBean(handlerType);
             return handler.handle(event);
         }
         catch(Exception e)
         {
-            System.err.println(e.getStackTrace());
+            System.err.println(e.getMessage());
         }
         return null;
     }

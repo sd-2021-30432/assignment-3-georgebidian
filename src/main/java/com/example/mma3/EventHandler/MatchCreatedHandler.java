@@ -7,6 +7,7 @@ import com.example.mma3.Strategy.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
@@ -15,13 +16,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+@Component
 @RequiredArgsConstructor
 public class MatchCreatedHandler implements IEventHandler<MatchCreated> {
 
     private final CovidTestService covidTestService;
     private final MatchService matchService;
     private final FighterService fighterService;
-    private final TournamentService tournamentService;
 
     public static boolean generateCovidResult(int probability){
         boolean result = new Random().nextInt(probability)==0;

@@ -15,7 +15,8 @@ class FighterComponent extends Component{
             initialTestId: '',
             secondTestId: '',
             inQuarantine: '',
-            wins: ''
+            wins: '',
+            errorMessage: null
         }
         this.onSubmit = this.onSubmit.bind(this)
         this.validate = this.validate.bind(this)
@@ -35,7 +36,12 @@ class FighterComponent extends Component{
         // eslint-disable-next-line
         if(this.state.idFighter == -1){
             FighterDataService.createFighter(fighter)
-                .then(() => this.props.history.push('/administrator/fighters'))
+                // .then(() => this.props.history.push('/administrator/fighters'))
+                .catch(
+                    error => {
+                        this.setState({errorMessage: error.response.data})
+                    }
+                )
         }else{
             FighterDataService.updateFighter(this.state.idFighter, fighter)
                 .then(() => this.props.history.push('/administrator/fighters'))
@@ -114,11 +120,12 @@ class FighterComponent extends Component{
         return (
             <div>
                 <h3>Fighter</h3>
+                {this.state.errorMessage && <div className="alert alert-danger">{this.state.errorMessage}</div>}
                 <div className="container">
                     <Formik
                         initialValues={{ idFighter, firstname, lastname, weight, initialTestId, secondTestId, inQuarantine, wins }}
                         onSubmit={this.onSubmit}
-                        validateOnChange={false}
+                        validateOnChange={false}as
                         validateOnBlur={false}
                         validate={this.validate}
                         enableReinitialize={true}
