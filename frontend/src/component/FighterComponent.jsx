@@ -108,8 +108,8 @@ class FighterComponent extends Component{
         if (values.color === '') {
             errors.color = 'Enter a color'
         }
-        else if (values.color !== 'grey' && values.color !== 'green' && values.color !== 'red'){
-            errors.color = 'Color field can be either green, red or grey'
+        else if (values.color !== 'lightgrey' && values.color !== 'lightgreen' && values.color !== 'lightpink'){
+            errors.color = 'Color field can be either lightgreen, lightpink or lightgrey'
         }
 
         return errors
