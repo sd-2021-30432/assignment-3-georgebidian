@@ -30,10 +30,14 @@ class ListCovidTestComponent extends Component{
     }
 
     deleteCovidTestClicked(idCovidTest) {
-        CovidTestDataService.deleteCovidTest(idCovidTest)
+        let event = {
+            "idCovidTest": idCovidTest
+        }
+        console.log(event)
+        CovidTestDataService.deleteCovidTest(event)
             .then(
                 response => {
-                    this.setState({ message: `Delete of covid test ${idCovidTest} Successful` })
+                    this.setState({ message: `Delete of covid test ${event.idCovidTest} Successful` })
                     this.refreshCovidTests()
                 }
             )

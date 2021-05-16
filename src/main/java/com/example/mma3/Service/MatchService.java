@@ -26,15 +26,7 @@ public class MatchService {
     }
     public List<MatchDTO> findAllDTO(){
         return matchRepository.findAll().stream()
-                .map(
-                        match -> fromEntity(
-                                match,
-                                fighterRepository.findById(match.getIdFighter1()).get().getName(),
-                                fighterRepository.findById(match.getIdFighter2()).get().getName(),
-                                tournamentRepository.findById(match.getIdTournament()).get().getTitle(),
-                                fighterRepository.findById(match.getWinner()).get().getName()
-                                )
-                )
+                .map(match -> fromEntity(match,fighterRepository,tournamentRepository))
                 .collect(toList());
     }
 

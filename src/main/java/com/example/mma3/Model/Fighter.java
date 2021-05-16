@@ -13,7 +13,7 @@ import javax.persistence.Id;
 @AllArgsConstructor
 @ToString
 @Entity
-public class Fighter {
+public class Fighter implements IFighter {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int idFighter;
@@ -23,9 +23,14 @@ public class Fighter {
     private int initialTestId;
     private int secondTestId;
     private boolean inQuarantine;
-    private int wins;
+    private String color;
 
     public String getName(){
         return firstname + " " + lastname;
+    }
+
+    @Override
+    public void changeColor(String color) {
+        this.color = color;
     }
 }

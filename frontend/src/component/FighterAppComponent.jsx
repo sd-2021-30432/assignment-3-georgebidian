@@ -16,7 +16,7 @@ class FighterAppComponent extends Component{
             initialTestId: '0',
             secondTestId: '0',
             inQuarantine: '0',
-            wins: '0',
+            color: '',
             message: null,
             testDate: null
         }
@@ -41,7 +41,7 @@ class FighterAppComponent extends Component{
                         initialTestId: response.data.idCovidTest,
                         secondTestId: 0,
                         inQuarantine: false,
-                        wins: 0
+                        color: 'green'
                     }
                     FighterDataService.createFighter(fighter)
                         .then(() => this.setState({ message: "Registered fighter "+ fighter.firstname + " " + fighter.lastname + " successfully" }))

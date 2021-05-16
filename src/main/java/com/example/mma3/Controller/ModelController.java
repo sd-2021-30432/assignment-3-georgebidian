@@ -30,6 +30,12 @@ public class ModelController {
         return mediator.handle(new GetAllFighters());
     }
 
+    @GetMapping(path="/fightersdto")
+    public ResponseEntity getAllFightersDTO()
+    {
+        return mediator.handle(new GetAllFightersDTO());
+    }
+
     @GetMapping(path="/matches")
     public ResponseEntity getAllMatches(){
         return mediator.handle(new GetAllMatches());

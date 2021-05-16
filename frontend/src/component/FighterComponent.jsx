@@ -15,7 +15,7 @@ class FighterComponent extends Component{
             initialTestId: '',
             secondTestId: '',
             inQuarantine: '',
-            wins: '',
+            color: '',
             errorMessage: null
         }
         this.onSubmit = this.onSubmit.bind(this)
@@ -31,7 +31,7 @@ class FighterComponent extends Component{
             initialTestId: parseInt(values.initialTestId),
             secondTestId: parseInt(values.secondTestId),
             inQuarantine: values.inQuarantine === 'true',
-            wins: parseInt(values.wins)
+            color: values.color
         }
         // eslint-disable-next-line
         if(this.state.idFighter == -1){
@@ -63,7 +63,7 @@ class FighterComponent extends Component{
                         initialTestId: response.data.initialTestId,
                         secondTestId: response.data.secondTestId,
                         inQuarantine: response.data.inQuarantine,
-                        wins: response.data.wins
+                        color: response.data.color
                     }));
     }
 
@@ -105,25 +105,25 @@ class FighterComponent extends Component{
         else if(values.inQuarantine !== "true" && values.inQuarantine !== "false"){
             errors.inQuarantine = 'Enter a valid value for the Quarantined field\nType true or false'
         }
-        if (values.wins === '') {
-            errors.wins = 'Enter a number of Wins'
+        if (values.color === '') {
+            errors.color = 'Enter a color'
         }
-        else if (/[^0-9]/.test(values.wins)){
-            errors.wins = 'Letters can not be added into the Wins field'
+        else if (values.color !== 'grey' && values.color !== 'green' && values.color !== 'red'){
+            errors.color = 'Color field can be either green, red or grey'
         }
 
         return errors
     }
 
     render() {
-        let { idFighter, firstname, lastname, weight, initialTestId, secondTestId, inQuarantine, wins } = this.state
+        let { idFighter, firstname, lastname, weight, initialTestId, secondTestId, inQuarantine, color } = this.state
         return (
             <div>
                 <h3>Fighter</h3>
                 {this.state.errorMessage && <div className="alert alert-danger">{this.state.errorMessage}</div>}
                 <div className="container">
                     <Formik
-                        initialValues={{ idFighter, firstname, lastname, weight, initialTestId, secondTestId, inQuarantine, wins }}
+                        initialValues={{ idFighter, firstname, lastname, weight, initialTestId, secondTestId, inQuarantine, color }}
                         onSubmit={this.onSubmit}
                         validateOnChange={false}as
                         validateOnBlur={false}
@@ -145,7 +145,7 @@ class FighterComponent extends Component{
                                                   className="alert alert-warning" />
                                     <ErrorMessage name="inQuarantine" component="div"
                                                   className="alert alert-warning" />
-                                    <ErrorMessage name="wins" component="div"
+                                    <ErrorMessage name="color" component="div"
                                                   className="alert alert-warning" />
                                     <fieldset className="form-group">
                                         <label>Id</label>
@@ -176,8 +176,8 @@ class FighterComponent extends Component{
                                         <Field className="form-control" type="text" name="inQuarantine"  />
                                     </fieldset>
                                     <fieldset className="form-group">
-                                        <label>Wins</label>
-                                        <Field className="form-control" type="text" name="wins"  />
+                                        <label>Color</label>
+                                        <Field className="form-control" type="text" name="color"  />
                                     </fieldset>
                                     <button className="btn btn-success" type="submit">Save</button>
                                 </Form>

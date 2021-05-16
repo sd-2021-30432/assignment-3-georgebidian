@@ -6,8 +6,8 @@ class CovidTestDataService {
     retrieveAllCovidTests(){
         return axios.get(`${API_URL}/covidtests`);
     }
-    deleteCovidTest(idCovidTest){
-        return axios.delete(`${API_URL}/deleteCovidTest/${idCovidTest}`)
+    deleteCovidTest(event){
+        return axios.delete(`${API_URL}/deleteCovidTest/`, event);
     }
     retrieveCovidTest(idCovidTest) {
         return axios.get(`${API_URL}/covidtests/${idCovidTest}`);

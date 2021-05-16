@@ -6,6 +6,9 @@ class FighterDataService {
     retrieveAllFighters(){
         return axios.get(`${API_URL}/fighters`);
     }
+    retrieveAllFightersDTO(){
+        return axios.get(`${API_URL}/fightersdto`);
+    }
     deleteFighter(idFighter){
         return axios.delete(`${API_URL}/deleteFighter/${idFighter}`)
     }

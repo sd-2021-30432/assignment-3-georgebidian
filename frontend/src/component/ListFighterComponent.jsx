@@ -70,7 +70,7 @@ class ListFighterComponent extends Component{
                             <th>Initial Test Id</th>
                             <th>Second Test Id</th>
                             <th>Quarantined</th>
-                            <th>Wins</th>
+                            <th>Color</th>
                             <th>Delete</th>
                             <th>Update</th>
                         </tr>
@@ -87,7 +87,7 @@ class ListFighterComponent extends Component{
                                         <td>{fighter.initialTestId}</td>
                                         <td>{fighter.secondTestId}</td>
                                         <td>{fighter.inQuarantine.toString()}</td>
-                                        <td>{fighter.wins}</td>
+                                        <td>{fighter.color}</td>
                                         <td><button className="btn btn-warning" onClick={() => this.deleteFighterClicked(fighter.idFighter)}>Delete</button></td>
                                         <td><button className="btn btn-success" onClick={() => this.updateFighterClicked(fighter.idFighter)}>Update</button></td>
                                     </tr>

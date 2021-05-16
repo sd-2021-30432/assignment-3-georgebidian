@@ -37,6 +37,7 @@ public class Mediator {
         _handlerMap.put(CovidTestUpdated.class, CovidTestUpdatedHandler.class);
         _handlerMap.put(TournamentUpdated.class, TournamentUpdatedHandler.class);
         _handlerMap.put(MatchUpdated.class, MatchUpdatedHandler.class);
+        _handlerMap.put(GetAllFightersDTO.class, GetAllFightersDTOHandler.class);
         //more handler TBA
     }
 

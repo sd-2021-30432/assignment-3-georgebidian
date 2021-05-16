@@ -3,6 +3,7 @@ import {ErrorMessage, Field, Form, Formik} from "formik";
 import MatchTestDataService from "../service/MatchTestDataService";
 import TournamentDataService from "../service/TournamentDataService";
 import axios from "axios";
+import FighterDataService from "../service/FighterDataService";
 
 class ScheduleComponent extends Component{
 
@@ -14,12 +15,22 @@ class ScheduleComponent extends Component{
             location: '',
             matches: [],
             tournamentType: '',
+            fighters: [],
             errorMessage: null
         }
         this.onSubmit = this.onSubmit.bind(this)
         this.validate = this.validate.bind(this)
         this.refreshMatches = this.refreshMatches.bind(this)
         this.deleteMatchClicked = this.deleteMatchClicked.bind(this)
+    }
+
+    componentDidMount() {
+        FighterDataService.retrieveAllFightersDTO().
+            then(
+                response => {
+                    this.setState({fighters: response.data})
+                }
+        )
     }
 
     validate(values) {
@@ -115,55 +126,81 @@ class ScheduleComponent extends Component{
         return(
             <div className='container'>
                 {this.state.errorMessage && <div className="alert alert-danger">{this.state.errorMessage}</div>}
-                <Formik
-                    initialValues={{ dateTimeStart,tournamentTitle, location, tournamentType}}
-                    onSubmit={this.onSubmit}
-                    validateOnChange={false}
-                    validateOnBlur={false}
-                    validate={this.validate}
-                    enableReinitialize={true}
-                >
-                    {
-                        (props) => (
-                            <Form>
-                                <ErrorMessage name="tournamentTitle" component="div"
-                                              className="alert alert-warning" />
-                                <ErrorMessage name="location" component="div"
-                                              className="alert alert-warning" />
-                                <ErrorMessage name="dateTimeStart" component="div"
-                                              className="alert alert-warning" />
-                                <ErrorMessage name="tournamentType" component="div"
-                                              className="alert alert-warning" />
-                                <fieldset className="form-group">
-                                    <label>Enter the title of the tournament</label>
-                                    <Field className="form-control" type="text" name="tournamentTitle"/>
-                                </fieldset>
-                                <fieldset className="form-group">
-                                    <label>Enter the location of the tournament</label>
-                                    <Field className="form-control" type="text" name="location"/>
-                                </fieldset>
-                                <fieldset className="form-group">
-                                    <label>Enter the beginning date of the tournament</label>
-                                    <Field className="form-control" type="date" name="dateTimeStart"/>
-                                </fieldset>
-                                <fieldset className="form-group">
-                                    <label>Select the occurrence rate of the matches</label>
-                                    <div role="group" aria-labelledby="my-radio-group">
-                                        <label>
-                                            <Field type="radio" name="tournamentType" value="Weekly" />
-                                            Weekly
-                                        </label>
-                                        <label>
-                                            <Field type="radio" name="tournamentType" value="Monthly" />
-                                            Monthly
-                                        </label>
-                                    </div>
-                                </fieldset>
-                                <button className="btn btn-success" type="submit">Schedule</button>
-                            </Form>
-                        )
-                    }
-                </Formik>
+                <div className="row">
+                    <div className="col">
+                        <Formik
+                            initialValues={{ dateTimeStart,tournamentTitle, location, tournamentType}}
+                            onSubmit={this.onSubmit}
+                            validateOnChange={false}
+                            validateOnBlur={false}
+                            validate={this.validate}
+                            enableReinitialize={true}
+                        >
+                            {
+                                (props) => (
+                                    <Form>
+                                        <ErrorMessage name="tournamentTitle" component="div"
+                                                      className="alert alert-warning" />
+                                        <ErrorMessage name="location" component="div"
+                                                      className="alert alert-warning" />
+                                        <ErrorMessage name="dateTimeStart" component="div"
+                                                      className="alert alert-warning" />
+                                        <ErrorMessage name="tournamentType" component="div"
+                                                      className="alert alert-warning" />
+                                        <fieldset className="form-group">
+                                            <label>Enter the title of the tournament</label>
+                                            <Field className="form-control" type="text" name="tournamentTitle"/>
+                                        </fieldset>
+                                        <fieldset className="form-group">
+                                            <label>Enter the location of the tournament</label>
+                                            <Field className="form-control" type="text" name="location"/>
+                                        </fieldset>
+                                        <fieldset className="form-group">
+                                            <label>Enter the beginning date of the tournament</label>
+                                            <Field className="form-control" type="date" name="dateTimeStart"/>
+                                        </fieldset>
+                                        <fieldset className="form-group">
+                                            <label>Select the occurrence rate of the matches</label>
+                                            <div role="group" aria-labelledby="my-radio-group">
+                                                <label>
+                                                    <Field type="radio" name="tournamentType" value="Weekly" />
+                                                    Weekly
+                                                </label>
+                                                <label>
+                                                    <Field type="radio" name="tournamentType" value="Monthly" />
+                                                    Monthly
+                                                </label>
+                                            </div>
+                                        </fieldset>
+                                        <button className="btn btn-success" type="submit">Schedule</button>
+                                    </Form>
+                                )
+                            }
+                        </Formik>
+                    </div>
+                    <div className="col">
+                        <h3>Fighters</h3>
+                        <div className="table table-fighter">
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Weight</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {
+                                this.state.fighters.map(
+                                    fighter =>
+                                        <tr bgcolor={fighter.color} key={fighter.id}>
+                                            <td>{fighter.name}</td>
+                                            <td>{fighter.weight}</td>
+                                        </tr>
+                                )
+                            }
+                            </tbody>
+                        </div>
+                    </div>
+                </div>
                 <br></br><br></br>
                 <div className="table">
                     <thead>
