@@ -9,14 +9,9 @@ class FighterAppComponent extends Component{
         super(props)
 
         this.state = {
-            idFighter: -1,
             firstname: '',
             lastname: '',
             weight: '',
-            initialTestId: '0',
-            secondTestId: '0',
-            inQuarantine: '0',
-            color: '',
             message: null,
             testDate: null
         }
@@ -34,14 +29,15 @@ class FighterAppComponent extends Component{
             .then(
                 response => {
                     let fighter = {
-                        idFighter: parseInt(this.state.idFighter),
+                        idFighter: -1,
                         firstname: values.firstname,
                         lastname: values.lastname,
                         weight: parseInt(values.weight),
                         initialTestId: response.data.idCovidTest,
                         secondTestId: 0,
                         inQuarantine: false,
-                        color: 'green'
+                        color: 'lightgray',
+                        countNegatives: 1
                     }
                     FighterDataService.createFighter(fighter)
                         .then(() => this.setState({ message: "Registered fighter "+ fighter.firstname + " " + fighter.lastname + " successfully" }))
@@ -77,14 +73,14 @@ class FighterAppComponent extends Component{
     }
 
     render() {
-        let { firstname, lastname, weight, initialTestId, secondTestId} = this.state
+        let { firstname, lastname, weight, testDate} = this.state
         return (
             <div>
                 <h3>Fighter</h3>
                 {this.state.message && <div class="alert alert-success">{this.state.message}</div>}
                 <div className="container">
                     <Formik
-                        initialValues={{ firstname, lastname, weight, initialTestId, secondTestId, testDate: null}}
+                        initialValues={{ firstname, lastname, weight, testDate}}
                         onSubmit={this.onSubmit}
                         validateOnChange={false}
                         validateOnBlur={false}

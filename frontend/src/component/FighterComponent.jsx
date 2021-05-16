@@ -16,6 +16,7 @@ class FighterComponent extends Component{
             secondTestId: '',
             inQuarantine: '',
             color: '',
+            countNegatives: '',
             errorMessage: null
         }
         this.onSubmit = this.onSubmit.bind(this)
@@ -31,7 +32,8 @@ class FighterComponent extends Component{
             initialTestId: parseInt(values.initialTestId),
             secondTestId: parseInt(values.secondTestId),
             inQuarantine: values.inQuarantine === 'true',
-            color: values.color
+            color: values.color,
+            countNegatives: values.countNegatives
         }
         // eslint-disable-next-line
         if(this.state.idFighter == -1){
@@ -63,7 +65,8 @@ class FighterComponent extends Component{
                         initialTestId: response.data.initialTestId,
                         secondTestId: response.data.secondTestId,
                         inQuarantine: response.data.inQuarantine,
-                        color: response.data.color
+                        color: response.data.color,
+                        countNegatives: response.data.countNegatives
                     }));
     }
 
@@ -111,19 +114,24 @@ class FighterComponent extends Component{
         else if (values.color !== 'lightgrey' && values.color !== 'lightgreen' && values.color !== 'lightpink'){
             errors.color = 'Color field can be either lightgreen, lightpink or lightgrey'
         }
-
+        if (values.countNegatives === '') {
+            errors.countNegatives = 'Enter a number of Consecutive Negative Tests'
+        }
+        else if (/[^0-9]/.test(values.countNegatives)){
+            errors.secondTestId = 'Letters can not be added into the Consecutive Negative Tests field'
+        }
         return errors
     }
 
     render() {
-        let { idFighter, firstname, lastname, weight, initialTestId, secondTestId, inQuarantine, color } = this.state
+        let { idFighter, firstname, lastname, weight, initialTestId, secondTestId, inQuarantine, color, countNegatives } = this.state
         return (
             <div>
                 <h3>Fighter</h3>
                 {this.state.errorMessage && <div className="alert alert-danger">{this.state.errorMessage}</div>}
                 <div className="container">
                     <Formik
-                        initialValues={{ idFighter, firstname, lastname, weight, initialTestId, secondTestId, inQuarantine, color }}
+                        initialValues={{ idFighter, firstname, lastname, weight, initialTestId, secondTestId, inQuarantine, color, countNegatives }}
                         onSubmit={this.onSubmit}
                         validateOnChange={false}as
                         validateOnBlur={false}
@@ -146,6 +154,8 @@ class FighterComponent extends Component{
                                     <ErrorMessage name="inQuarantine" component="div"
                                                   className="alert alert-warning" />
                                     <ErrorMessage name="color" component="div"
+                                                  className="alert alert-warning" />
+                                    <ErrorMessage name="countNegatives" component="div"
                                                   className="alert alert-warning" />
                                     <fieldset className="form-group">
                                         <label>Id</label>
@@ -178,6 +188,10 @@ class FighterComponent extends Component{
                                     <fieldset className="form-group">
                                         <label>Color</label>
                                         <Field className="form-control" type="text" name="color"  />
+                                    </fieldset>
+                                    <fieldset className="form-group">
+                                        <label>Number of Consecutive Negative Tests</label>
+                                        <Field className="form-control" type="text" name="countNegatives"  />
                                     </fieldset>
                                     <button className="btn btn-success" type="submit">Save</button>
                                 </Form>

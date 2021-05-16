@@ -29,6 +29,7 @@ public class FighterUpdatedHandler implements IEventHandler<FighterUpdated>{
             f.setInQuarantine(fighter.isInQuarantine());
             f.setInitialTestId(fighter.getInitialTestId());
             f.setSecondTestId(fighter.getSecondTestId());
+            f.setCountNegatives(fighter.getCountNegatives());
             fighterSaved = fighterService.save(f);
         }
         return new ResponseEntity<Fighter>(fighterSaved, HttpStatus.OK);

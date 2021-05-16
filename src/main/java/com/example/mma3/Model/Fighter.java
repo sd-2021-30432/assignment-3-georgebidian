@@ -24,6 +24,7 @@ public class Fighter implements IFighter {
     private int secondTestId;
     private boolean inQuarantine;
     private String color;
+    private int countNegatives;
 
     public String getName(){
         return firstname + " " + lastname;
