@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 public class Context {
     private Strategy strategy;
 
-    public int executeStrategy(int currentWeek){
-        return strategy.addWeeks(currentWeek);
+    public String executeStrategy(String currentDate){
+        return strategy.computeDate(currentDate);
     }
 }

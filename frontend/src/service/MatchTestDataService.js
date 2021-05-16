@@ -16,8 +16,16 @@ class MatchTestDataService {
         return axios.put(`${API_URL}/matches/${idMatch}`, match);
     }
 
-    createMatch(tournament) {
-        return axios.post(`${API_URL}/matches`,  tournament);
+    createMatch(currentDate, tournament) {
+        return axios.post(`${API_URL}/matches/${currentDate}`,  tournament);
+    }
+
+    computeNextPeriod(currentDate, tournamentType){
+        return axios.get(`${API_URL}/currentDate/${currentDate}/${tournamentType}`);
+    }
+
+    deleteAllMatches(){
+        return axios.delete(`${API_URL}/matches/deleteall`);
     }
 }
 

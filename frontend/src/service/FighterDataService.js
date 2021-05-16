@@ -22,6 +22,10 @@ class FighterDataService {
     createFighter(fighter) {
         return axios.post(`${API_URL}/fighters/`, fighter);
     }
+
+    testFighters(dateTimeStart){
+        return axios.put(`${API_URL}/testfighters/${dateTimeStart}`);
+    }
 }
 
 export default new FighterDataService()

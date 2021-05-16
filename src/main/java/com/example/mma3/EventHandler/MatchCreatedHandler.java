@@ -29,45 +29,32 @@ public class MatchCreatedHandler implements IEventHandler<MatchCreated> {
         return result;
     }
 
-    private List<Fighter> testFighters(String dateTimeStart){
+    private List<Fighter> testFighters(String currentDate){
         List<Fighter> fighters = fighterService.findAll();
-        LocalDate date = LocalDate.parse(dateTimeStart);
-
-        //Setting initial values
-        for(Fighter fighter : fighters){
-            CovidTest newCovidTest = new CovidTest();
-            boolean result = generateCovidResult(10);
-            newCovidTest.setResult(result);
-            newCovidTest.setTestDate(date.toString());
-            CovidTest covidTest =  covidTestService.save(newCovidTest);
-            if(result == true){
-                fighter.setInitialTestId(covidTest.getIdCovidTest());
-                fighter.setInQuarantine(true);
-            }
-            else{
-                fighter.setSecondTestId(covidTest.getIdCovidTest());
-            }
-        }
+        LocalDate date = LocalDate.parse(currentDate);
 
         for(Fighter fighter : fighters){
             if(fighter.isInQuarantine()){
-                int healthyWeeks = 0;
-                while(healthyWeeks < 3){
-                    boolean result = generateCovidResult(10);
-                    date = date.plusWeeks(1);
-                    if(result == false){
-                        healthyWeeks++;
-                    }
-                    else{
-                        healthyWeeks = 0;
-                    }
-                }
+                boolean result = generateCovidResult(10);
+                date = date.plusWeeks(1);
                 CovidTest newCovidTest = new CovidTest();
                 newCovidTest.setTestDate(date.toString());
-                newCovidTest.setResult(false);
-                CovidTest covidTest =  covidTestService.save(newCovidTest);
-                fighter.setSecondTestId(covidTest.getIdCovidTest());
-                fighter.setInQuarantine(false);
+                if(result == false){
+                    newCovidTest.setResult(false);
+                    CovidTest covidTest =  covidTestService.save(newCovidTest);
+                    fighter.setSecondTestId(covidTest.getIdCovidTest());
+                    fighter.incrementNegatives();
+                }
+                else{
+                    newCovidTest.setResult(true);
+                    CovidTest covidTest =  covidTestService.save(newCovidTest);
+                    fighter.setInitialTestId(covidTest.getIdCovidTest());
+                    fighter.setCountNegatives(0);
+                }
+                if(fighter.getCountNegatives() == 3){
+                    fighter.setInQuarantine(false);
+                }
+                fighterService.save(fighter);
             }
         }
 
@@ -83,34 +70,28 @@ public class MatchCreatedHandler implements IEventHandler<MatchCreated> {
         return false;
     }
 
-    private List<Fighter> pickFighters(List<Fighter> fighterList, String dateTimeStart, int weekFlag) throws Exception {
+    private List<Fighter> pickFighters(List<Fighter> fighterList, String currentDate) throws Exception {
         List<Fighter> pickedFighters = new ArrayList<Fighter>();
         for(Fighter fighter : fighterList){
-            CovidTest secondTest = covidTestService.findById(fighter.getSecondTestId());
-            LocalDate secondTestDate = LocalDate.parse(secondTest.getTestDate());
-            LocalDate fightDate = LocalDate.parse(dateTimeStart);
-            if(!isScheduled(fighter) &&  fightDate.isAfter(secondTestDate)){
+            if(!isScheduled(fighter) &&  !fighter.isInQuarantine()){
                 pickedFighters.add(fighter);
             }
         }
 
         if(pickedFighters.isEmpty()){
-            throw new Exception("No fighter found for week " + weekFlag);
+            throw new Exception("No fighter found for date " + currentDate);
         }
 
         fighterList.remove(pickedFighters.get(0));
         for(Fighter fighter : fighterList){
-            CovidTest secondTest = covidTestService.findById(fighter.getSecondTestId());
-            LocalDate secondTestDate = LocalDate.parse(secondTest.getTestDate());
-            LocalDate fightDate = LocalDate.parse(dateTimeStart);
             float weightDiff = Math.abs(pickedFighters.get(0).getWeight() - fighter.getWeight());
-            if(!isScheduled(fighter) &&  fightDate.isAfter(secondTestDate) && weightDiff <= 5){
+            if(!isScheduled(fighter) &&  !fighter.isInQuarantine() && weightDiff <= 5){
                 pickedFighters.add(fighter);
             }
         }
 
         if(pickedFighters.size() == 1){
-            throw new Exception("Can not find second fighter for week " + weekFlag);
+            throw new Exception("Can not find second fighter for date " + currentDate);
         }
 
         return pickedFighters;
@@ -119,17 +100,23 @@ public class MatchCreatedHandler implements IEventHandler<MatchCreated> {
 
     @Override
     public ResponseEntity handle(MatchCreated event) {
-        int weekFlag = event.getWeekFlag();
         Tournament tournament = event.getTournament();
         MatchBuilder builder = new MatchBuilder();
-        String dateTimeStart = tournament.getDateTimeStart();
-        List<Fighter> fighters = testFighters(dateTimeStart);
-        LocalDate currentDate = LocalDate.parse(dateTimeStart).plusDays( (int)(weekFlag - 1) * 7 + (int)(Math.random() * 6) );
+        List<Fighter> fighters = null;
+        //In case the type of tournament is Monthly, test the fighters 4 times
+        //otherwise test the fighters only once
+        if(tournament.getType().equals("Monthly")){
+            for(int i = 0; i < 4; i++)
+                fighters = testFighters(event.getCurrentDate());
+        }
+        else{
+            fighters = testFighters(event.getCurrentDate());
+        }
+        LocalDate currentDate = LocalDate.parse(event.getCurrentDate());
         List<Fighter> pickedFighters;
         try {
-            pickedFighters = pickFighters(fighters, currentDate.toString(), (int)weekFlag);
+            pickedFighters = pickFighters(fighters, event.getCurrentDate());
         } catch (Exception e) {
-
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         }
         int idFighter1 = pickedFighters.get(0).getIdFighter();

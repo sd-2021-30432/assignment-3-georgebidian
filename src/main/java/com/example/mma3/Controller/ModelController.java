@@ -142,24 +142,26 @@ public class ModelController {
 
     private int weekFlag = 0;
 
-    private static int applyStrategy(Tournament tournament, int weekFlag){
-        String tournamentType = tournament.getType();
-        Context context;
-        if(tournamentType.equals("Weekly")) {
-            context = new Context(new WeeklyStrategy());
-        }
-        else{
-            context = new Context(new MonthlyStrategy());
-        }
-        return context.executeStrategy(weekFlag);
+    @GetMapping(path="/currentDate/{currentDate}/{tournamentType}")
+    public ResponseEntity computeNextDate(@PathVariable String currentDate, @PathVariable String tournamentType){
+        NextDateComputed event = new NextDateComputed();
+        event.setCurrentDate(currentDate);
+        event.setTournamentType(tournamentType);
+        return mediator.handle(event);
     }
 
-    @PostMapping(path="/matches")
-    public ResponseEntity createMatchT(@RequestBody Tournament tournament){
+    @PutMapping(path="testfighters/{dateTimeStart}")
+    public ResponseEntity testFighters(@PathVariable String dateTimeStart){
+        FightersTested event = new FightersTested();
+        event.setDateTimeStart(dateTimeStart);
+        return mediator.handle(event);
+    }
+
+    @PostMapping(path="/matches/{currentDate}")
+    public ResponseEntity createMatchT(@PathVariable String currentDate, @RequestBody Tournament tournament){
         MatchCreated event = new MatchCreated();
-        weekFlag = applyStrategy(tournament, weekFlag);
         event.setTournament(tournament);
-        event.setWeekFlag(weekFlag);
+        event.setCurrentDate(currentDate);
         return mediator.handle(event);
     }
 
@@ -195,4 +197,9 @@ public class ModelController {
         return mediator.handle(event);
     }
 
+    @DeleteMapping(path="/matches/deleteall")
+    public ResponseEntity deleteAllMatches(){
+        AllMatchesDeleted event = new AllMatchesDeleted();
+        return mediator.handle(event);
+    }
 }

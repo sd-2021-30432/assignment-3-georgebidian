@@ -2,7 +2,6 @@ import React, {Component} from 'react';
 import {ErrorMessage, Field, Form, Formik} from "formik";
 import MatchTestDataService from "../service/MatchTestDataService";
 import TournamentDataService from "../service/TournamentDataService";
-import axios from "axios";
 import FighterDataService from "../service/FighterDataService";
 
 class ScheduleComponent extends Component{
@@ -16,21 +15,32 @@ class ScheduleComponent extends Component{
             matches: [],
             tournamentType: '',
             fighters: [],
-            errorMessage: null
+            firstSubmit: 0,
+            currentDate: null,
+            tournament: null,
+            message: null,
+            errorMessage: null,
+            messageDng: null
         }
         this.onSubmit = this.onSubmit.bind(this)
         this.validate = this.validate.bind(this)
         this.refreshMatches = this.refreshMatches.bind(this)
         this.deleteMatchClicked = this.deleteMatchClicked.bind(this)
+        this.retrieveFighters = this.retrieveFighters.bind(this)
+        this.firstSubmit = this.firstSubmit.bind(this)
     }
 
     componentDidMount() {
-        FighterDataService.retrieveAllFightersDTO().
-            then(
+        this.retrieveFighters()
+    }
+
+    retrieveFighters(){
+        FighterDataService.retrieveAllFightersDTO()
+            .then(
                 response => {
                     this.setState({fighters: response.data})
                 }
-        )
+            )
     }
 
     validate(values) {
@@ -54,62 +64,85 @@ class ScheduleComponent extends Component{
         MatchTestDataService.deleteMatch(parseInt(idMatch))
             .then(
                 response => {
-                    console.log(idMatch)
+                    this.setState({errorMessage: null})
                     this.refreshMatches()
                 }
             )
     }
 
-    onSubmit(values) {
-        TournamentDataService.retrieveAllTournaments()
+    firstSubmit(values){
+        MatchTestDataService.deleteAllMatches()
+            .then(response => {console.log(response.data)})
+            .catch(error => {this.setState({errorMessage: error.response.data})})
+        this.setState({currentDate: values.dateTimeStart})
+        let tournament = {
+            idTournament: -1,
+            title: values.tournamentTitle,
+            location: values.location,
+            dateTimeStart: values.dateTimeStart,
+            type: values.tournamentType
+        }
+        TournamentDataService.createTournament2(tournament)
             .then(
                 response => {
-                    let isUsed = false;
-                    let id = -1;
-                    for(let tournament of response.data){
-                        if(tournament.location === values.location && tournament.dateTimeStart === values.dateTimeStart && tournament.title === values.tournamentTitle ){
-                            isUsed = true;
-                            id = tournament.idTournament;
-                            break;
-                        }
-                    }
-                    let tournament = {
-                        idTournament: id,
-                        title: values.tournamentTitle,
-                        location: values.location,
-                        dateTimeStart: values.dateTimeStart,
-                        type: values.tournamentType
-                    }
-                    // eslint-disable-next-line
-                    if(isUsed == true){
-                        MatchTestDataService.createMatch(tournament)
-                            .then(this.refreshMatches)
-                            .catch(
-                                error => {
-                                    this.setState({errorMessage: error.response.data})
-                                    console.log(this.state.errorMessage)
-                                }
-                            )
-                    }
-                    else{
-                        axios.put("http://localhost:8080/mma/data/week-reset")
-                        TournamentDataService.createTournament2(tournament)
-                            .then(
-                                response => {
-                                    MatchTestDataService.createMatch(response.data)
-                                        .then(this.refreshMatches)
-                                        .catch(
-                                            error => {
-                                                this.setState({errorMessage: error.response.data})
-                                                console.log(this.state.errorMessage)
-                                            }
-                                        )
-                                }
-                            )
-                    }
+                    this.setState({tournament: response.data})
+                    FighterDataService.testFighters(values.dateTimeStart)
+                        .then(
+                            () => {
+                                this.setState({message: "Fighters have been tested!"})
+                                this.retrieveFighters()
+                            }
+                        )
+                    MatchTestDataService.createMatch(values.dateTimeStart, response.data)
+                        .then(this.refreshMatches)
+                        .catch(
+                            error => {
+                                this.setState({errorMessage: error.response.data})
+                                this.setState({message: null})
+                            }
+                        )
                 }
             )
+        this.setState({firstSubmit: this.state.firstSubmit+1})
+    }
 
+    onSubmit(values) {
+        // eslint-disable-next-line
+        if(this.state.firstSubmit == 0){
+            this.firstSubmit(values)
+        }
+        else{
+            if(values.tournamentTitle !== this.state.tournament.title || values.tournamentType !== this.state.tournament.type ||
+               values.location !== this.state.tournament.location || values.dateTimeStart !== this.state.tournament.dateTimeStart) {
+                this.setState({messageDng: "The input fields have been modified! A new tournament will be created with the new inputs!"})
+                this.setState({firstSubmit: 0})
+                this.firstSubmit(values)
+            }
+            else{
+                MatchTestDataService.computeNextPeriod(this.state.currentDate, values.tournamentType)
+                    .then(
+                        response => {
+                            this.setState({currentDate: response.data})
+                            MatchTestDataService.createMatch(response.data, this.state.tournament)
+                                .then(() => {
+                                    this.refreshMatches()
+                                    this.retrieveFighters()
+                                    this.setState({firstSubmit: this.state.firstSubmit+1})
+                                })
+                                .catch(
+                                    error => {
+                                        this.setState({errorMessage: error.response.data})
+                                        this.setState({message: null})
+                                    }
+                                )
+                        }
+                    )
+            }
+        }
+        // eslint-disable-next-line
+        if(this.state.firstSubmit == 2){
+            this.setState({messageDng: null})
+        }
     }
 
     refreshMatches(){
@@ -125,6 +158,8 @@ class ScheduleComponent extends Component{
         const {tournamentTitle,dateTimeStart, location, tournamentType} = this.state
         return(
             <div className='container'>
+                {this.state.messageDng && <div className="alert alert-warning">{this.state.messageDng}</div>}
+                {this.state.message && <div className="alert alert-success">{this.state.message}</div>}
                 {this.state.errorMessage && <div className="alert alert-danger">{this.state.errorMessage}</div>}
                 <div className="row">
                     <div className="col">
@@ -172,7 +207,7 @@ class ScheduleComponent extends Component{
                                                 </label>
                                             </div>
                                         </fieldset>
-                                        <button className="btn btn-success" type="submit">Schedule</button>
+                                        <button className="btn btn-success" type="submit" disabled={this.state.errorMessage}>Schedule</button>
                                     </Form>
                                 )
                             }
@@ -191,7 +226,7 @@ class ScheduleComponent extends Component{
                             {
                                 this.state.fighters.map(
                                     fighter =>
-                                        <tr bgcolor={fighter.color} key={fighter.id}>
+                                        <tr bgcolor={fighter.color} key={fighter.name}>
                                             <td>{fighter.name}</td>
                                             <td>{fighter.weight}</td>
                                         </tr>
@@ -200,8 +235,9 @@ class ScheduleComponent extends Component{
                             </tbody>
                         </div>
                     </div>
-                </div>
-                <br></br><br></br>
+                </div><br/>
+                <h5>Current date:{this.state.currentDate}</h5>
+                <br/>
                 <div className="table">
                     <thead>
                         <tr>
@@ -219,7 +255,7 @@ class ScheduleComponent extends Component{
                     {
                         this.state.matches.map(
                             match =>
-                                <tr key={match.id}>
+                                <tr key={match.idMatch}>
                                     <td>{match.idMatch}</td>
                                     <td>{match.tournamentTitle}</td>
                                     <td>{match.nameFighter1}</td>

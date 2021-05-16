@@ -25,7 +25,6 @@ public class FighterUpdatedHandler implements IEventHandler<FighterUpdated>{
             f.setFirstname(fighter.getFirstname());
             f.setLastname(fighter.getLastname());
             f.setWeight(fighter.getWeight());
-            f.setColor(fighter.getColor());
             f.setInQuarantine(fighter.isInQuarantine());
             f.setInitialTestId(fighter.getInitialTestId());
             f.setSecondTestId(fighter.getSecondTestId());

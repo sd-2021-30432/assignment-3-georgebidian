@@ -7,5 +7,5 @@ import lombok.Data;
 public class MatchCreated {
 
     private Tournament tournament;
-    private int weekFlag;
+    private String currentDate;
 }

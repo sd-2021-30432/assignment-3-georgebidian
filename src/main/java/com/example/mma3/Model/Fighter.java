@@ -23,15 +23,18 @@ public class Fighter implements IFighter {
     private int initialTestId;
     private int secondTestId;
     private boolean inQuarantine;
-    private String color;
     private int countNegatives;
 
     public String getName(){
         return firstname + " " + lastname;
     }
 
+    public void incrementNegatives(){
+        this.countNegatives++;
+    }
+
     @Override
-    public void changeColor(String color) {
-        this.color = color;
+    public String getColor() {
+        return "lightgray";
     }
 }

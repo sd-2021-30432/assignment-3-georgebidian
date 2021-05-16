@@ -38,7 +38,7 @@ class FighterComponent extends Component{
         // eslint-disable-next-line
         if(this.state.idFighter == -1){
             FighterDataService.createFighter(fighter)
-                // .then(() => this.props.history.push('/administrator/fighters'))
+                .then(() => this.props.history.push('/administrator/fighters'))
                 .catch(
                     error => {
                         this.setState({errorMessage: error.response.data})
@@ -105,14 +105,14 @@ class FighterComponent extends Component{
         if (values.inQuarantine === '') {
             errors.inQuarantine = 'Enter a value for the Quarantined field'
         }
-        else if(values.inQuarantine !== "true" && values.inQuarantine !== "false"){
+        else if(values.inQuarantine !== 'true' && values.inQuarantine !== 'false'){
             errors.inQuarantine = 'Enter a valid value for the Quarantined field\nType true or false'
         }
         if (values.color === '') {
             errors.color = 'Enter a color'
         }
-        else if (values.color !== 'lightgrey' && values.color !== 'lightgreen' && values.color !== 'lightpink'){
-            errors.color = 'Color field can be either lightgreen, lightpink or lightgrey'
+        else if (values.color !== 'lightgray' && values.color !== 'lightgreen' && values.color !== 'lightpink'){
+            errors.color = 'Color field can be either lightgreen, lightpink or lightgray'
         }
         if (values.countNegatives === '') {
             errors.countNegatives = 'Enter a number of Consecutive Negative Tests'
@@ -133,7 +133,7 @@ class FighterComponent extends Component{
                     <Formik
                         initialValues={{ idFighter, firstname, lastname, weight, initialTestId, secondTestId, inQuarantine, color, countNegatives }}
                         onSubmit={this.onSubmit}
-                        validateOnChange={false}as
+                        validateOnChange={false}
                         validateOnBlur={false}
                         validate={this.validate}
                         enableReinitialize={true}

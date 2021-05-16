@@ -8,7 +8,7 @@ abstract class FighterDecorator implements IFighter{
     }
 
     @Override
-    public void changeColor(String color) {
-        this.fighter.changeColor(color);
+    public String getColor() {
+        return this.fighter.getColor();
     }
 }

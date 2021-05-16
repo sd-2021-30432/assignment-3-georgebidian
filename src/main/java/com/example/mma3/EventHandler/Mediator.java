@@ -38,6 +38,9 @@ public class Mediator {
         _handlerMap.put(TournamentUpdated.class, TournamentUpdatedHandler.class);
         _handlerMap.put(MatchUpdated.class, MatchUpdatedHandler.class);
         _handlerMap.put(GetAllFightersDTO.class, GetAllFightersDTOHandler.class);
+        _handlerMap.put(NextDateComputed.class, NextDateComputedHandler.class);
+        _handlerMap.put(FightersTested.class, FightersTestedHandler.class);
+        _handlerMap.put(AllMatchesDeleted.class, AllMatchesDeletedHandler.class);
         //more handler TBA
     }
 
