@@ -4,10 +4,9 @@ import com.example.mma3.EventHandler.Mediator;
 import com.example.mma3.Events.Commands.*;
 import com.example.mma3.Events.Queries.*;
 import com.example.mma3.Model.*;
-import com.example.mma3.Strategy.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -129,18 +128,6 @@ public class ModelController {
         event.setTournament(tournament);
         return mediator.handle(event);
     }
-
-    public void resetWeek(){
-        this.weekFlag = 0;
-    }
-
-    @PutMapping(path="/week-reset")
-    public ResponseEntity resetAppWeek(){
-        resetWeek();
-        return new ResponseEntity(HttpStatus.OK);
-    }
-
-    private int weekFlag = 0;
 
     @GetMapping(path="/currentDate/{currentDate}/{tournamentType}")
     public ResponseEntity computeNextDate(@PathVariable String currentDate, @PathVariable String tournamentType){
